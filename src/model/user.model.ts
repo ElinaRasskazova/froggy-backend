@@ -13,32 +13,34 @@ export interface UserDocument extends mongoose.Document {
 
 const UserSchema = new mongoose.Schema(
     {
-        email: { type: String, required: true, unique: true},
+        email: { type: String, required: true, unique: true },
         name: { type: String, required: true },
-        password: {type: String, required: true},
+        password: { type: String, required: true },
     },
-    {timestamps: true}
+    { timestamps: true }
 );
 
 UserSchema.pre("save", async function (next: mongoose.HookNextFunction) {
-    let  user = this as UserDocument;
+    let user = this as UserDocument;
 
     if (!user.isModified("password")) return next();
 
-    const salt = await bcrypt.genSalt(config.get("SaltWorkFactory"));
+    const salt = await bcrypt.genSalt(config.get("saltWorkFactory"));
 
     const hash = await bcrypt.hashSync(user.password, salt);
 
     user.password = hash;
 
-    return next()
-})
+    return next();
+});
 
-UserSchema.methods.comparePassword = async function (candidatePassword: string) {
+UserSchema.methods.comparePassword = async function (
+    candidatePassword: string
+) {
     const user = this as UserDocument;
 
-    return bcrypt.compare(candidatePassword, user.password).catch((e)=> false)
-}
+    return bcrypt.compare(candidatePassword, user.password).catch((e) => false);
+};
 
 const User = mongoose.model<UserDocument>("User", UserSchema);
 
